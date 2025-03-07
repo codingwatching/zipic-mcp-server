@@ -1,0 +1,22 @@
+{
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:zipic-mcp-server}",
+      "name": "Debug zipic-mcp-server",
+      "program": "${workspaceFolder:zipic-mcp-server}/.build/debug/zipic-mcp-server",
+      "preLaunchTask": "swift: Build Debug zipic-mcp-server"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:zipic-mcp-server}",
+      "name": "Release zipic-mcp-server",
+      "program": "${workspaceFolder:zipic-mcp-server}/.build/release/zipic-mcp-server",
+      "preLaunchTask": "swift: Build Release zipic-mcp-server"
+    }
+  ]
+}
