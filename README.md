@@ -17,11 +17,7 @@ A Model Context Protocol server that provides image compression and optimization
   * `level` (number, optional): Compression level (1-100)
   * `width` (number, optional): Target width
   * `height` (number, optional): Target height
-  * `specified` (boolean, optional): Whether to use Zipic's default output directory
-  * `location` (string, optional): Location type when specified is false ("custom")
   * `directory` (string, optional): Custom output directory when location is "custom"
-  * `addSubfolder` (boolean, optional): Create subfolder for output
-  * `addSuffix` (boolean, optional): Add suffix to output filename
   * `suffix` (string, optional): Custom suffix when addSuffix is true
 
 ## Installation
@@ -62,6 +58,8 @@ A Model Context Protocol server that provides image compression and optimization
    swift build -c release --arch x86_64 -j $(sysctl -n hw.ncpu)
    
    # Option C: Build Universal Binary (both arm64 and x86_64)
+   swift build -c release --arch arm64 -j $(sysctl -n hw.ncpu)
+   swift build -c release --arch x86_64 -j $(sysctl -n hw.ncpu)
    mkdir -p .build/bin
    lipo -create \
      -output .build/bin/zipic-mcp-server \
@@ -102,7 +100,7 @@ Add to your Claude settings:
 
 ![cursor](screenshots/cursor.webp)
 
-## Requirements
+## Development Requirements
 
 * Swift 6.0 or later
 * macOS 14.0 or later
