@@ -98,6 +98,10 @@ Add to your Claude settings:
 }
 ```
 
+### Configure for cursor
+
+![cursor](screenshots/cursor.webp)
+
 ## Requirements
 
 * Swift 6.0 or later
