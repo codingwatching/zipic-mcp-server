@@ -8,11 +8,12 @@ import JSONSchemaBuilder
 /// Check if Zipic app is installed
 func isZipicInstalled() -> Bool {
     let zipicBundleID = "studio.5km.zipic"
-    return NSWorkspace.shared.urlForApplication(withBundleIdentifier: zipicBundleID) != nil
+    let isInstalled = NSWorkspace.shared.urlForApplication(withBundleIdentifier: zipicBundleID) != nil
+    return isInstalled
 }
 
 /// Calculate output path for compressed images
-func calculateOutputPaths(inputUrls: [String], directory: String?, specified: Bool?) -> [String] {
+func calculateOutputPaths(inputUrls: [String], directory: String?, specified: Bool? = false) -> [String] {
     // If using default directory (specified = true), return empty array as we can't predict the path
     if specified == true {
         return []
@@ -24,7 +25,8 @@ func calculateOutputPaths(inputUrls: [String], directory: String?, specified: Bo
             let originalPath = (url as NSString)
             let pathExtension = originalPath.pathExtension
             let pathWithoutExtension = originalPath.deletingPathExtension
-            return "\(pathWithoutExtension)-compressed.\(pathExtension)"
+            let outputPath = "\(pathWithoutExtension)-compressed.\(pathExtension)"
+            return outputPath
         }
     }
 
@@ -34,8 +36,9 @@ func calculateOutputPaths(inputUrls: [String], directory: String?, specified: Bo
         let filename = originalPath.lastPathComponent
         let filenameWithoutExtension = (filename as NSString).deletingPathExtension
         let pathExtension = originalPath.pathExtension
-        return (directory! as NSString).appendingPathComponent(
+        let outputPath = (directory! as NSString).appendingPathComponent(
             "\(filenameWithoutExtension)-compressed.\(pathExtension)")
+        return outputPath
     }
 }
 
@@ -45,86 +48,115 @@ func calculateOutputPaths(inputUrls: [String], directory: String?, specified: Bo
 /// This tool provides a simple way to compress images using default settings.
 @Schemable
 struct QuickCompressInput {
-    /// Array of file paths to compress.
-    /// Each path should point to an image file or directory.
+
+    @SchemaOptions(
+        title: "URLs",
+        description:
+            "Array of file paths to compress. Each path MUST be an absolute path pointing to either: - An image file (e.g., \"/Users/name/Pictures/photo.jpg\") - A directory containing images (e.g., \"/Users/name/Pictures/vacation\")"
+    )
     let urls: [String]
+
 }
 
 // MARK: - Advanced Compression Tool
 
-/// Input for advanced image compression with customizable options.
-/// This tool provides full control over the compression process including format,
-/// quality level, output location, and other settings.
 @Schemable
 struct AdvancedCompressInput {
-    /// Array of file paths to compress.
-    /// Each path should point to an image file or directory.
+
+    @SchemaOptions(
+        title: "URLs",
+        description: """
+            Array of file paths to compress. Each path MUST be an absolute path pointing to either:
+              An image file (e.g., "/Users/name/Pictures/photo.jpg")
+              A directory containing images (e.g., "/Users/name/Pictures/vacation")
+            """
+    )
     let urls: [String]
 
-    /// Compression level (1 ~ 6).
-    /// Higher values mean more compression but lower quality.
-    /// Default levels: 2-3 provide good balance between quality and size.
-    let level: Double?
+    @NumberOptions(minimum: 1, maximum: 6)
+    @SchemaOptions(
+        title: "Level",
+        description: """
+            Compression level (MUST be an integer between 1 and 6).
+            Higher values mean more compression but lower quality.
+            Default levels: 2-3 provide good balance between quality and size.
+            Examples:
+              1: Highest quality, minimal compression
+              6: Maximum compression, lowest quality
+            default: 3
+            """,
+        default: 3
+    )
+    let level: Int?
 
-    /// Output format for compressed images.
-    /// Supported formats: "original", "jpeg", "webp", "heic", "avif", "png"
+    @SchemaOptions(
+        title: "Format",
+        description: """
+            Output format for compressed images.
+            Supported formats: "original", "jpeg", "webp", "heic", "avif", "png"
+            default: "original"
+            """,
+        default: "original"
+    )
     let format: String?
 
-    /// Output directory path for compressed images.
-    /// Only used when specified is false and location is "custom".
-    /// If not provided in this case, images will be saved alongside originals.
+    @SchemaOptions(
+        title: "Directory",
+        description: """
+            Output directory path for compressed images.
+            MUST be an absolute path.
+            Only used when specified is false and location is "custom".
+            If not provided in this case, images will be saved alongside originals.
+            default: nil
+            """
+    )
     let directory: String?
 
-    /// Target width for image resizing.
-    /// Set to 0 for auto-adjustment while maintaining aspect ratio.
-    let width: Double?
+    @NumberOptions(minimum: 0)
+    @SchemaOptions(
+        title: "Width",
+        description: """
+            Target width for image resizing.
+            Set to 0 for auto-adjustment while maintaining aspect ratio.
+            default: 0
+            """,
+        default: 0
+    )
+    let width: Int?
 
-    /// Target height for image resizing.
-    /// Set to 0 for auto-adjustment while maintaining aspect ratio.
-    let height: Double?
+    @NumberOptions(minimum: 0)
+    @SchemaOptions(
+        title: "Height",
+        description: """
+            Target height for image resizing.
+            Set to 0 for auto-adjustment while maintaining aspect ratio.
+            default: 0
+            """,
+        default: 0
+    )
+    let height: Int?
 
-    /// Location type for saving compressed images.
-    /// Options: "original" - same as source, "custom" - use specified directory
-    /// Only used when specified is false.
-    let location: String?
-
-    /// Whether to add a suffix to compressed file names.
-    /// If true, the suffix will be appended to the original filename.
-    let addSuffix: Bool?
-
-    /// Custom suffix for compressed file names.
-    /// Only used when addSuffix is true.
-    /// Example: "-compressed" will result in "image-compressed.jpg"
+    @SchemaOptions(
+        title: "Suffix",
+        description: """
+            Custom suffix for compressed file names.
+            Only used when addSuffix is true.
+            Example: "-compressed" will result in "image-compressed.jpg"
+            default: nil
+            """
+    )
     let suffix: String?
-
-    /// Whether to create a subfolder for compressed images.
-    /// If true, compressed images will be saved in a new subfolder.
-    let addSubfolder: Bool?
-
-    /// Whether to use Zipic's default directory settings.
-    /// If true: uses Zipic's default directory settings (ignores location and directory)
-    /// If false: uses custom location settings (requires location to be set)
-    let specified: Bool?
 }
 
-let advancedCompressTool = Tool(name: "advancedCompress") {
-    (input: AdvancedCompressInput) async throws -> [TextContentOrImageContentOrEmbeddedResource] in
+let advancedCompressTool = Tool(
+    name: "advancedCompress",
+    description: "Advanced image compression tool"
+) { (input: AdvancedCompressInput) async throws -> [TextContentOrImageContentOrEmbeddedResource] in
     // Check if Zipic is installed
     guard isZipicInstalled() else {
         return [
             .text(TextContent(text: "Error: Zipic app is not installed. Please install Zipic from https://zipic.app"))
         ]
-    }
-
-    // Validate location and directory settings
-    if input.specified == false {
-        if input.location == "custom" && input.directory == nil {
-            return [
-                .text(
-                    TextContent(
-                        text: "Error: When specified is false and location is 'custom', directory must be provided"))
-            ]
-        }
     }
 
     // Build base URL
@@ -145,15 +177,10 @@ let advancedCompressTool = Tool(name: "advancedCompress") {
         queryItems.append(URLQueryItem(name: "format", value: format))
     }
 
-    // Only add location and directory if specified is false
-    if input.specified == false {
-        if let location = input.location {
-            queryItems.append(URLQueryItem(name: "location", value: location))
-
-            if location == "custom", let directory = input.directory {
-                queryItems.append(URLQueryItem(name: "directory", value: directory))
-            }
-        }
+    if let directory = input.directory {
+        queryItems.append(URLQueryItem(name: "directory", value: directory))
+        queryItems.append(URLQueryItem(name: "location", value: "custom"))
+        queryItems.append(URLQueryItem(name: "specified", value: "false"))
     }
 
     if let width = input.width {
@@ -164,20 +191,9 @@ let advancedCompressTool = Tool(name: "advancedCompress") {
         queryItems.append(URLQueryItem(name: "height", value: String(height)))
     }
 
-    if let addSuffix = input.addSuffix {
-        queryItems.append(URLQueryItem(name: "addSuffix", value: String(addSuffix)))
-    }
-
     if let suffix = input.suffix {
         queryItems.append(URLQueryItem(name: "suffix", value: suffix))
-    }
-
-    if let addSubfolder = input.addSubfolder {
-        queryItems.append(URLQueryItem(name: "addSubfolder", value: String(addSubfolder)))
-    }
-
-    if let specified = input.specified {
-        queryItems.append(URLQueryItem(name: "specified", value: String(specified)))
+        queryItems.append(URLQueryItem(name: "addSuffix", value: "true"))
     }
 
     urlComponents.queryItems = queryItems
@@ -189,7 +205,9 @@ let advancedCompressTool = Tool(name: "advancedCompress") {
 
     // Calculate expected output paths
     let outputPaths = calculateOutputPaths(
-        inputUrls: input.urls, directory: input.directory, specified: input.specified)
+        inputUrls: input.urls,
+        directory: input.directory
+    )
 
     // Use AppKit to open URL
     if NSWorkspace.shared.open(finalURL) {
@@ -201,8 +219,6 @@ let advancedCompressTool = Tool(name: "advancedCompress") {
             for path in outputPaths {
                 response.append(TextContent(text: "\n- \(path)"))
             }
-        } else if input.specified == true {
-            response.append(TextContent(text: "\nImages will be saved to Zipic's default directory."))
         }
 
         return response.map { .text($0) }
@@ -211,8 +227,10 @@ let advancedCompressTool = Tool(name: "advancedCompress") {
     }
 }
 
-let quickCompressTool = Tool(name: "quickCompress") {
-    (input: QuickCompressInput) async throws -> [TextContentOrImageContentOrEmbeddedResource] in
+let quickCompressTool = Tool(
+    name: "quickCompress",
+    description: "Quick image compression tool"
+) { (input: QuickCompressInput) async throws -> [TextContentOrImageContentOrEmbeddedResource] in
     // Check if Zipic is installed
     guard isZipicInstalled() else {
         return [
