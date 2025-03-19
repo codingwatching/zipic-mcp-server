@@ -7,7 +7,7 @@ import MCPServer
 import OSLog
 
 // Define version information
-let APP_VERSION = "0.1.1"
+let APP_VERSION = "0.1.2"
 let APP_NAME = "zipic-mcp-server"
 
 let mcpLogger = Logger(
