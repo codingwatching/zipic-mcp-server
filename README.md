@@ -1,88 +1,95 @@
 # Zipic MCP Server
 
-A Model Context Protocol server that provides image compression and optimization capabilities through Zipic app. This server enables LLMs to compress and optimize images using Zipic's powerful features.
+> A Model Context Protocol server that provides image compression capabilities. This server enables LLMs to compress and optimize images through simple and advanced compression tools. This is a Swift implementation of a zipic MCP server using the MCP Swift SDK.
 
-![Swift](https://img.shields.io/badge/Swift-6.0+-orange.svg)
-![Platform](https://img.shields.io/badge/Platform-macOS%2014.0+-brightgreen.svg)
-![License](https://img.shields.io/badge/License-MIT-blue.svg)
+![Swift Platform](https://img.shields.io/badge/platform-macOS-lightgrey)
+![License](https://img.shields.io/badge/license-MIT-blue)
+
+## ✨ Features
+
+* **Quick Image Compression**: Rapidly compress images with default settings
+* **Advanced Compression**: Fine-tune compression settings including quality level, format, and dimensions
+* **Multiple Format Support**: Output images in JPEG, WebP, HEIC, AVIF, or PNG formats
+* **Batch Processing**: Compress multiple images or entire directories at once
+* **Size Preservation Option**: Choose to replace original files or save alongside them
 
 ## Available Tools
 
-* `quickCompress` - Quickly compress images using Zipic's default settings
-  * `urls` (array of strings, required): Array of image URLs to compress
+* `quickCompress` - Quickly compress images with default settings
+  * `urls` (array, required): Array of file paths pointing to images or directories containing images
 
-* `advancedCompress` - Compress images with advanced options
-  * `urls` (array of strings, required): Array of image URLs to compress
-  * `format` (string, optional): Output format (e.g., "webp", "jpg", "png")
-  * `level` (number, optional): Compression level (1-100)
-  * `width` (number, optional): Target width
-  * `height` (number, optional): Target height
-  * `directory` (string, optional): Custom output directory when location is "custom"
-  * `suffix` (string, optional): Custom suffix when addSuffix is true
+* `advancedCompress` - Compress images with fine-tuned settings
+  * `urls` (array, required): Array of file paths pointing to images or directories containing images
+  * `level` (integer, optional): Compression level from 1-6 (1=highest quality, 6=maximum compression)
+  * `format` (string, optional): Output format ("original", "jpeg", "webp", "heic", "avif", "png")
+  * `width` (integer, optional): Target width for resizing (0 for auto-adjustment)
+  * `height` (integer, optional): Target height for resizing (0 for auto-adjustment)
+  * `suffix` (string, optional): Custom suffix for compressed file names
+  * `directory` (string, optional): Output directory path for compressed images
 
 ## Installation
 
-### Option 1: Download Pre-built Binary
+### Option 1: One-Line Installation (curl)
 
-1. Download and install [Zipic](https://zipic.app) app
-2. Download the latest `zipic-mcp-server` binary from [GitHub Releases](https://github.com/okooo5km/zipic-mcp-server/releases)
-3. Make the binary executable:
+The easiest way to install is with the one-line installer, which automatically downloads the latest version and installs it to `~/.local/bin` in your home directory:
 
-   ```bash
-   chmod +x /path/to/zipic-mcp-server
-   ```
+```bash
+curl -fsSL https://raw.githubusercontent.com/okooo5km/zipic-mcp-server/main/install.sh | bash
+```
 
-4. Move the binary to a directory in your PATH (optional):
+The installer will:
 
-   ```bash
-   sudo mv /path/to/zipic-mcp-server /usr/local/bin/
-   ```
+* Create `~/.local/bin` if it doesn't exist
+* Add this directory to your PATH (in .zshrc or .bashrc)
+* Download and install the latest version
+* Make the binary executable
 
 ### Option 2: Build from Source
 
-1. Download and install [Zipic](https://zipic.app) app
-2. Clone the repository:
+1. Clone the repository:
 
    ```bash
-   git clone https://github.com/5km/zipic-mcp-server.git
+   git clone https://github.com/okooo5km/zipic-mcp-server.git
    cd zipic-mcp-server
    ```
 
-3. Choose a build option:
+2. Build the project:
 
    ```bash
-   # Option A: Build for Apple Silicon (arm64)
-   swift build -c release --arch arm64 -j $(sysctl -n hw.ncpu)
-   
-   # Option B: Build for Intel (x86_64)
-   swift build -c release --arch x86_64 -j $(sysctl -n hw.ncpu)
-   
-   # Option C: Build Universal Binary (both arm64 and x86_64)
-   swift build -c release --arch arm64 -j $(sysctl -n hw.ncpu)
-   swift build -c release --arch x86_64 -j $(sysctl -n hw.ncpu)
-   mkdir -p .build/bin
-   lipo -create \
-     -output .build/bin/zipic-mcp-server \
-     $(swift build -c release --arch arm64 --show-bin-path)/zipic-mcp-server \
-     $(swift build -c release --arch x86_64 --show-bin-path)/zipic-mcp-server
+   swift build -c release
    ```
 
-4. Install the binary (optional):
+3. Install the binary:
 
    ```bash
-   # After building, choose ONE of these commands based on your build choice:
-   
-   # If you built for arm64 (Option A):
-   sudo cp .build/apple/Products/Release/zipic-mcp-server /usr/local/bin/
-   
-   # If you built for x86_64 (Option B):
-   sudo cp .build/x86_64-apple-macosx/release/zipic-mcp-server /usr/local/bin/
-   
-   # If you built universal binary (Option C):
-   sudo cp .build/bin/zipic-mcp-server /usr/local/bin/
+   # Install to user directory (recommended, no sudo required)
+   mkdir -p ~/.local/bin
+   cp $(swift build -c release --show-bin-path)/zipic-mcp-server ~/.local/bin/
    ```
 
-## Configuration
+   Make sure `~/.local/bin` is in your PATH by adding to your shell configuration file:
+
+   ```bash
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc  # or ~/.bashrc
+   source ~/.zshrc  # or source ~/.bashrc
+   ```
+
+## Command Line Arguments
+
+The server supports the following command line arguments:
+
+* `-h, --help`: Display help information about the server, its usage, and available options
+* `-v, --version`: Display the version number of the zipic-mcp-server
+
+Example usage:
+
+```bash
+# Display help information
+zipic-mcp-server --help
+
+# Display version information
+zipic-mcp-server --version
+```
 
 ### Configure for Claude.app
 
@@ -96,21 +103,100 @@ Add to your Claude settings:
 }
 ```
 
-### Configure for cursor
+### Configure for Cursor
 
-![cursor](screenshots/cursor.webp)
+Add the following configuration to your Cursor editor's Settings - mcp.json:
+
+```json
+{
+  "mcpServers": {
+    "zipic": {
+      "command": "zipic-mcp-server"
+    }
+  }
+}
+```
+
+### Example System Prompt
+
+You can use the following system prompt to help Claude utilize the zipic-mcp-server effectively:
+
+```
+You have access to an image compression tool through MCP. Use this to help users:
+
+- Compress single images or batches of images
+- Reduce file size while maintaining quality
+- Convert between image formats
+- Resize images to specific dimensions
+
+Use the following tools appropriately:
+- `quickCompress` for simple compression tasks with default settings
+- `advancedCompress` when the user needs fine-grained control over quality, format, and dimensions
+
+Ask for absolute file paths to images when the user wants to compress files.
+```
 
 ## Development Requirements
 
 * Swift 6.0 or later
 * macOS 14.0 or later
-* Zipic app installed
-* [MCP Swift SDK](https://github.com/gsabran/mcp-swift-sdk) 0.2.0 or later
+* MCP Swift SDK 0.2.0 or later
+
+## Usage Examples
+
+### Quick Compression
+
+```json
+{
+  "urls": [
+    "/Users/username/Desktop/photo.jpg",
+    "/Users/username/Pictures/vacation"
+  ]
+}
+```
+
+### Advanced Compression
+
+```json
+{
+  "urls": ["/Users/username/Desktop/photo.jpg"],
+  "level": 2,
+  "format": "webp",
+  "width": 1200,
+  "height": 0
+}
+```
+
+## Use Cases
+
+* **Website Optimization**: Reduce image sizes for faster web performance
+* **Storage Management**: Compress large photo libraries to save disk space
+* **Format Conversion**: Convert between image formats for compatibility
+* **Batch Processing**: Process multiple images with consistent settings
+* **Social Media Preparation**: Optimize images for specific platforms
 
 ## Version History
 
-See [GitHub Releases](https://github.com/okooo5km/zipic-mcp-server/releases) for version history and changelog.
+See GitHub Releases for version history and changelog.
+
+## ☕️ Support the Project
+
+If you find Zipic MCP Server helpful, please consider supporting its development:
+
+* ⭐️ Star the project on GitHub
+* 🐛 Report bugs or suggest features
+* 💝 Support via:
+
+<p align="center">
+  <a href="https://buymeacoffee.com/okooo5km">
+    <img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=okooo5km&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" style="border-radius: 8px;" />
+  </a>
+</p>
 
 ## License
 
-zipic-mcp-server is licensed under the MIT License. This means you are free to use, modify, and distribute the software, subject to the terms and conditions of the MIT License. For more details, please see the LICENSE file in the project repository.
+zipic-mcp-server is licensed under the MIT License. This means you are free to use, modify, and distribute the software, subject to the terms and conditions of the MIT License.
+
+## About
+
+A Swift implementation of an image compression server for Model Context Protocol (MCP), enabling AI assistants to compress and optimize images directly. This project is built using the MCP Swift SDK.
